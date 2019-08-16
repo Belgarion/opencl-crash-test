@@ -134,7 +134,7 @@ int count_devices_cl() {
 	return num_devices;
 }
 
-int peach_init_cl(uint8_t  difficulty, uint8_t *blockNumber) {
+int peach_init_cl(uint8_t  difficulty, uint8_t *blockNumber, char *compile_options) {
 	count_devices_cl();
 	cl_context_properties properties[] = { CL_CONTEXT_PLATFORM, (cl_context_properties)platform_id, 0 };
 
@@ -151,25 +151,15 @@ int peach_init_cl(uint8_t  difficulty, uint8_t *blockNumber) {
 			exit(1);
 		}
 
-		printf("Building with -O0\n");
-		cl_program prog_minimal = opencl_compile_source(ctx[i].context, 1, &device_id[i], "cl_minimal.cl", "-cl-fp32-correctly-rounded-divide-sqrt -O0");
+		printf("Building with \"%s\"\n", compile_options);
+		cl_program prog_minimal = opencl_compile_source(ctx[i].context, 1, &device_id[i], "cl_minimal.cl", compile_options);
 		cl_program prog_parts[] = {prog_minimal};
 		cl_program prog = clLinkProgram(ctx[i].context, 1, &device_id[i], NULL, 1, prog_parts, NULL, NULL, &err);
 		if (CL_SUCCESS != err) {
 			printf("clLinkProgram failed. Error: %d\n", err);
 			exit(1);
 		}
-		printf("Build with -O0 successful\n");
-
-		printf("Building with -O1\n");
-		prog_minimal = opencl_compile_source(ctx[i].context, 1, &device_id[i], "cl_minimal.cl", "-cl-fp32-correctly-rounded-divide-sqrt -O1");
-		prog_parts[0] = prog_minimal;
-		prog = clLinkProgram(ctx[i].context, 1, &device_id[i], NULL, 1, prog_parts, NULL, NULL, &err);
-		if (CL_SUCCESS != err) {
-			printf("clLinkProgram failed. Error: %d\n", err);
-			exit(1);
-		}
-		printf("Build with -O1 successful\n");
+		printf("Build successful\n");
 
 		ctx[i].k_test = clCreateKernel(prog, "test", &err);
 		if (CL_SUCCESS != err) {
@@ -196,10 +186,16 @@ int peach_init_cl(uint8_t  difficulty, uint8_t *blockNumber) {
 	return num_devices;
 }
 
-int main() {
+int main(int argc, char **argv) {
 	uint64_t blockNumber = 1;
 	uint8_t *bnum = (uint8_t*)&blockNumber;
 	uint8_t diff = 18;
-	peach_init_cl(diff, bnum);
+	if (argc > 1) {
+		peach_init_cl(diff, bnum, argv[1]);
+	} else {
+		char opts[] = "";
+		peach_init_cl(diff, bnum, opts);
+	}
 }
+
 
