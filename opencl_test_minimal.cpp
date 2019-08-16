@@ -59,7 +59,7 @@ cl_program opencl_compile_source(cl_context context, uint8_t num_devices, cl_dev
 	err = clCompileProgram(prog, num_devices, devices, options, 0, NULL, NULL, NULL, NULL);
 	if (CL_SUCCESS != err) {
 		printf("clCompileProgram failed. Error: %d\n", err);
-		if (err == CL_COMPILE_PROGRAM_FAILURE) {
+		if (err == CL_COMPILE_PROGRAM_FAILURE || err == CL_BUILD_PROGRAM_FAILURE) {
 			// Determine the size of the log
 			size_t log_size;
 			clGetProgramBuildInfo(prog, devices[0], CL_PROGRAM_BUILD_LOG, 0, NULL, &log_size);
